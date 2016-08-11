@@ -8,15 +8,37 @@ namespace DX11Engine
 	{
 		Vertex() {}
 		Vertex(float x, float y, float z,
-			float cr, float cg, float cb, float ca)
-			: pos(x, y, z), color(cr, cg, cb, ca) {}
+			float u, float v,
+			float nx, float ny, float nz)
+			: pos(x, y, z), texCoord(u, v), normal(nx, ny, nz) {}
 
 		XMFLOAT3 pos;
-		XMFLOAT4 color;
+		XMFLOAT2 texCoord;
+		XMFLOAT3 normal;
+	};
+
+	struct Light
+	{
+		Light()
+		{
+			ZeroMemory(this, sizeof(Light));
+		}
+
+		XMFLOAT3 dir;
+		float pad;
+		XMFLOAT4 ambient;
+		XMFLOAT4 diffuse;
 	};
 
 	struct WVPBuffer
 	{
 		XMMATRIX WVP;
+		XMMATRIX World;
 	};
+
+	struct LightBuffer
+	{
+		Light light;
+	};
+
 }

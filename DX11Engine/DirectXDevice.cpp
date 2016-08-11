@@ -67,11 +67,13 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 	scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
+	UINT flags = D3D11_CREATE_DEVICE_DEBUG;
+
 	result = D3D11CreateDeviceAndSwapChain(
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		NULL,
+		flags,
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -119,7 +121,8 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	result = m_device->CreateInputLayout(layout, ARRAYSIZE(layout), m_vs.Bytecode->GetBufferPointer(), m_vs.Bytecode->GetBufferSize(), &m_layout);
 	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateInputLayout"));
@@ -128,6 +131,19 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 
 	// Setup viewport
 	m_devcon->RSSetViewports(1, &(BuildViewport(width, height)));
+
+	// Setup render state
+	D3D11_RASTERIZER_DESC rsDesc;
+	ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+	rsDesc.FillMode = D3D11_FILL_SOLID;
+	rsDesc.CullMode = D3D11_CULL_BACK;
+	rsDesc.MultisampleEnable = true;
+
+	result = m_device->CreateRasterizerState(&rsDesc, &m_renderState);
+
+	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateRasterizerState"));
+	m_devcon->RSSetState(m_renderState);
 
 	return true;
 }
@@ -147,73 +163,80 @@ bool DX11Engine::DirectXDevice::InitScene()
 	// Load square
 	Vertex v[] =
 	{
-		Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f),
-		Vertex(-1.0f, +1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f),
-		Vertex(+1.0f, +1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f),
-		Vertex(+1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 1.0f),
-		Vertex(-1.0f, -1.0f, +1.0f, 0.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(-1.0f, +1.0f, +1.0f, 1.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 1.0f, 1.0f),
-		Vertex(+1.0f, -1.0f, +1.0f, 1.0f, 0.0f, 0.0f, 1.0f),
+		// Front Face
+		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f,-1.0f, -1.0f, -1.0f),
+		Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f,-1.0f,  1.0f, -1.0f),
+		Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 1.0f,  1.0f, -1.0f),
+		Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f),
+
+		// Back Face
+		Vertex(-1.0f, -1.0f, 1.0f, 1.0f, 1.0f,-1.0f, -1.0f, 1.0f),
+		Vertex(1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f),
+		Vertex(1.0f,  1.0f, 1.0f, 0.0f, 0.0f, 1.0f,  1.0f, 1.0f),
+		Vertex(-1.0f,  1.0f, 1.0f, 1.0f, 0.0f,-1.0f,  1.0f, 1.0f),
+
+		// Top Face
+		Vertex(-1.0f, 1.0f, -1.0f, 0.0f, 1.0f,-1.0f, 1.0f, -1.0f),
+		Vertex(-1.0f, 1.0f,  1.0f, 0.0f, 0.0f,-1.0f, 1.0f,  1.0f),
+		Vertex(1.0f, 1.0f,  1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f),
+		Vertex(1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f),
+
+		// Bottom Face
+		Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f,-1.0f, -1.0f, -1.0f),
+		Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, -1.0f, -1.0f),
+		Vertex(1.0f, -1.0f,  1.0f, 0.0f, 0.0f, 1.0f, -1.0f,  1.0f),
+		Vertex(-1.0f, -1.0f,  1.0f, 1.0f, 0.0f,-1.0f, -1.0f,  1.0f),
+
+		// Left Face
+		Vertex(-1.0f, -1.0f,  1.0f, 0.0f, 1.0f,-1.0f, -1.0f,  1.0f),
+		Vertex(-1.0f,  1.0f,  1.0f, 0.0f, 0.0f,-1.0f,  1.0f,  1.0f),
+		Vertex(-1.0f,  1.0f, -1.0f, 1.0f, 0.0f,-1.0f,  1.0f, -1.0f),
+		Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f,-1.0f, -1.0f, -1.0f),
+
+		// Right Face
+		Vertex(1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, -1.0f, -1.0f),
+		Vertex(1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 1.0f,  1.0f, -1.0f),
+		Vertex(1.0f,  1.0f,  1.0f, 1.0f, 0.0f, 1.0f,  1.0f,  1.0f),
+		Vertex(1.0f, -1.0f,  1.0f, 1.0f, 1.0f, 1.0f, -1.0f,  1.0f),
 	};
 
 	DWORD i[] = {
-		// front face
-		0, 1, 2,
-		0, 2, 3,
+		// Front Face
+		0,  1,  2,
+		0,  2,  3,
 
-		// back face
-		4, 6, 5,
-		4, 7, 6,
+		// Back Face
+		4,  5,  6,
+		4,  6,  7,
 
-		// left face
-		4, 5, 1,
-		4, 1, 0,
+		// Top Face
+		8,  9, 10,
+		8, 10, 11,
 
-		// right face
-		3, 2, 6,
-		3, 6, 7,
+		// Bottom Face
+		12, 13, 14,
+		12, 14, 15,
 
-		// top face
-		1, 5, 6,
-		1, 6, 2,
+		// Left Face
+		16, 17, 18,
+		16, 18, 19,
 
-		// bottom face
-		4, 0, 3,
-		4, 3, 7
+		// Right Face
+		20, 21, 22,
+		20, 22, 23
 	};
 
 	Model cube = Model();
 
-	if (!cube.Init(m_device, v, _countof(v), i, _countof(i)))
+	if (!cube.Init(m_device, v, _countof(v), i, _countof(i), L"AncientMayanBlocks-ColorMap.png"))
 		return false;
 
 	cube.Transformation = XMMatrixIdentity();
 	m_models.push_back(cube);
 
-	// Load triangle
-	Vertex triVerts[] =
-	{
-		Vertex(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(1.0f,  0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(0.5f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f),
-	};
-
-	DWORD triIndicies[] =
-	{
-		0, 2, 1
-	};
-
-	Model triangle = Model();
-
-	if (!triangle.Init(m_device, triVerts, _countof(triVerts), triIndicies, _countof(triIndicies)))
-		return false;
-
-	triangle.Transformation = XMMatrixIdentity();
-	m_models.push_back(triangle);
+	D3D11_BUFFER_DESC desc;
 
 	// Create WVP Constant buffer
-	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
 	desc.Usage = D3D11_USAGE_DEFAULT;
@@ -224,6 +247,26 @@ bool DX11Engine::DirectXDevice::InitScene()
 
 	result = m_device->CreateBuffer(&desc, NULL, &m_wvpBuffer);
 	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateBuffer"));
+
+	// Create Light Constant Buffer
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.ByteWidth = sizeof(LightBuffer);
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	result = m_device->CreateBuffer(&desc, NULL, &m_sceneBuffer);
+	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateBuffer"));
+
+	// Setup light
+	Light light = Light();
+	light.dir = XMFLOAT3(-2.5f, 2.5f, -2.5f);
+	light.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	light.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	m_lightBuffer.light = light;
+
 	return true;
 }
 
@@ -237,6 +280,10 @@ bool DX11Engine::DirectXDevice::DrawScene()
 	m_devcon->ClearRenderTargetView(m_rtv, Background);
 	m_devcon->ClearDepthStencilView(m_depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+
+	m_devcon->UpdateSubresource(m_sceneBuffer, 0, NULL, &m_lightBuffer, 0, 0);
+	m_devcon->PSSetConstantBuffers(0, 1, &m_sceneBuffer);
+
 	WVPBuffer wvpBuffer;
 	XMMATRIX wvp;
 
@@ -244,6 +291,7 @@ bool DX11Engine::DirectXDevice::DrawScene()
 		Camera.Recalcuate();
 		wvp = Camera.BuildWVP(i.Transformation);
 		wvpBuffer.WVP = XMMatrixTranspose(wvp);
+		wvpBuffer.World = XMMatrixIdentity();
 
 		m_devcon->UpdateSubresource(m_wvpBuffer, 0, NULL, &wvpBuffer, 0, 0);
 		m_devcon->VSSetConstantBuffers(0, 1, &m_wvpBuffer);
@@ -293,6 +341,7 @@ bool DX11Engine::DirectXDevice::Release()
 	SAFE_RELEASE(m_depthStencil);
 	SAFE_RELEASE(m_depthBuffer);
 	SAFE_RELEASE(m_wvpBuffer);
+	SAFE_RELEASE(m_renderState);
 
 	m_vs.Release();
 	m_ps.Release();

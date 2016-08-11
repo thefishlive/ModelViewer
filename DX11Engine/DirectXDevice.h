@@ -48,6 +48,10 @@ namespace DX11Engine
 		ID3D11DepthStencilView* m_depthStencil;
 		ID3D11Texture2D* m_depthBuffer;
 		ID3D11Buffer* m_wvpBuffer;
+		ID3D11RasterizerState* m_renderState;
+
+		LightBuffer m_lightBuffer;
+		ID3D11Buffer* m_sceneBuffer;
 
 		VertexShader m_vs;
 		PixelShader m_ps;

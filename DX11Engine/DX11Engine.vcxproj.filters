@@ -77,4 +77,12 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="AncientMayanBlocks-ColorMap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="AncientMayanBlocks-NormalMap.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
