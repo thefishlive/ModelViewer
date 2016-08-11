@@ -1,5 +1,7 @@
 #pragma once
 
+#include <xnamath.h>
+
 namespace DX11Engine
 {
 	struct Vertex
@@ -11,5 +13,10 @@ namespace DX11Engine
 
 		XMFLOAT3 pos;
 		XMFLOAT4 color;
+	};
+
+	struct WVPBuffer
+	{
+		XMMATRIX WVP;
 	};
 }

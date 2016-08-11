@@ -2,14 +2,15 @@
 
 using namespace DX11Engine;
 
-DX11Engine::DirectXDevice::DirectXDevice(int width, int height, bool windowed, D3DXCOLOR background = { 0.0f, 0.0f, 0.0f, 1.0f }) :
-	m_background(background),
+DX11Engine::DirectXDevice::DirectXDevice(int width, int height, BOOL windowed, CCamera camera, D3DXCOLOR background) :
+	Background(background),
 	m_vs(VertexShader(L"Effect.fx", "VS")),
 	m_ps(PixelShader(L"Effect.fx", "PS")),
 	m_width(width),
 	m_height(height),
 	m_windowed(windowed),
-	m_models()
+	m_models(),
+	Camera(camera)
 {
 }
 
@@ -143,27 +144,54 @@ bool DX11Engine::DirectXDevice::InitScene()
 	m_ps.BindShader(m_devcon);
 
 	// Load models
-	Vertex v[] = 
+	// Load square
+	Vertex v[] =
 	{
-		Vertex(-0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(-0.5f,  0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(0.5f,  0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f),
-		Vertex(0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f),
+		Vertex(-1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f),
+		Vertex(-1.0f, +1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f),
+		Vertex(+1.0f, +1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f),
+		Vertex(+1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 1.0f),
+		Vertex(-1.0f, -1.0f, +1.0f, 0.0f, 1.0f, 1.0f, 1.0f),
+		Vertex(-1.0f, +1.0f, +1.0f, 1.0f, 1.0f, 1.0f, 1.0f),
+		Vertex(+1.0f, +1.0f, +1.0f, 1.0f, 0.0f, 1.0f, 1.0f),
+		Vertex(+1.0f, -1.0f, +1.0f, 1.0f, 0.0f, 0.0f, 1.0f),
 	};
 
-	DWORD i[] = 
-	{
+	DWORD i[] = {
+		// front face
 		0, 1, 2,
 		0, 2, 3,
+
+		// back face
+		4, 6, 5,
+		4, 7, 6,
+
+		// left face
+		4, 5, 1,
+		4, 1, 0,
+
+		// right face
+		3, 2, 6,
+		3, 6, 7,
+
+		// top face
+		1, 5, 6,
+		1, 6, 2,
+
+		// bottom face
+		4, 0, 3,
+		4, 3, 7
 	};
 
-	Model square = Model();
+	Model cube = Model();
 
-	if (!square.Init(m_device, v, _countof(v), i, _countof(i)))
+	if (!cube.Init(m_device, v, _countof(v), i, _countof(i)))
 		return false;
 
-	m_models.push_back(square);
+	cube.Transformation = XMMatrixIdentity();
+	m_models.push_back(cube);
 
+	// Load triangle
 	Vertex triVerts[] =
 	{
 		Vertex(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f),
@@ -181,7 +209,21 @@ bool DX11Engine::DirectXDevice::InitScene()
 	if (!triangle.Init(m_device, triVerts, _countof(triVerts), triIndicies, _countof(triIndicies)))
 		return false;
 
+	triangle.Transformation = XMMatrixIdentity();
 	m_models.push_back(triangle);
+
+	// Create WVP Constant buffer
+	D3D11_BUFFER_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
+
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.ByteWidth = sizeof(WVPBuffer);
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	result = m_device->CreateBuffer(&desc, NULL, &m_wvpBuffer);
+	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateBuffer"));
 	return true;
 }
 
@@ -192,10 +234,20 @@ bool DX11Engine::DirectXDevice::UpdateScene()
 
 bool DX11Engine::DirectXDevice::DrawScene()
 {
-	m_devcon->ClearRenderTargetView(m_rtv, m_background);
+	m_devcon->ClearRenderTargetView(m_rtv, Background);
 	m_devcon->ClearDepthStencilView(m_depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
+	WVPBuffer wvpBuffer;
+	XMMATRIX wvp;
+
 	for (auto &i : m_models) {
+		Camera.Recalcuate();
+		wvp = Camera.BuildWVP(i.Transformation);
+		wvpBuffer.WVP = XMMatrixTranspose(wvp);
+
+		m_devcon->UpdateSubresource(m_wvpBuffer, 0, NULL, &wvpBuffer, 0, 0);
+		m_devcon->VSSetConstantBuffers(0, 1, &m_wvpBuffer);
+
 		i.Draw(m_device, m_devcon);
 	}
 
@@ -240,6 +292,7 @@ bool DX11Engine::DirectXDevice::Release()
 	SAFE_RELEASE(m_layout);
 	SAFE_RELEASE(m_depthStencil);
 	SAFE_RELEASE(m_depthBuffer);
+	SAFE_RELEASE(m_wvpBuffer);
 
 	m_vs.Release();
 	m_ps.Release();

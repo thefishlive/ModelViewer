@@ -2,6 +2,7 @@
 
 DX11Engine::Model::Model()
 {
+	Transformation = XMMatrixIdentity();
 }
 
 DX11Engine::Model::~Model()
@@ -60,7 +61,7 @@ bool DX11Engine::Model::Draw(ID3D11Device* device, ID3D11DeviceContext* devcon)
 
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
-
+	
 	devcon->IASetVertexBuffers(0, 1, &m_verticies, &stride, &offset);
 	devcon->IASetIndexBuffer(m_indicies, DXGI_FORMAT_R32_UINT, 0);
 	devcon->DrawIndexed(m_iCount, 0, 0);

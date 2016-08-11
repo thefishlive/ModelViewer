@@ -16,6 +16,8 @@ namespace DX11Engine
 
 		bool Loaded;
 
+		XMMATRIX Transformation;
+
 	private:
 		ID3D11Buffer* m_verticies;
 		ID3D11Buffer* m_indicies;

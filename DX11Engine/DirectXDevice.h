@@ -7,13 +7,16 @@
 #include "VertexShader.h"
 #include "PixelShader.h"
 #include "Model.h"
+#include "Camera.h"
+
+typedef const DX11Engine::Camera& CCamera;
 
 namespace DX11Engine
 {
 	class DirectXDevice
 	{
 	public:
-		DirectXDevice(int width, int height, bool windowed, D3DXCOLOR background);
+		DirectXDevice(int width, int height, BOOL windowed, CCamera camera, D3DXCOLOR background = { 0.0f, 0.0f, 0.0f, 1.0f });
 		~DirectXDevice();
 
 		bool InitDevice(HINSTANCE instance, HWND window);
@@ -26,7 +29,8 @@ namespace DX11Engine
 
 		bool Release();
 
-		D3DXCOLOR m_background;
+		D3DXCOLOR Background;
+		Camera Camera;
 
 	private:
 		HWND m_window;
@@ -43,6 +47,7 @@ namespace DX11Engine
 		ID3D11InputLayout* m_layout;
 		ID3D11DepthStencilView* m_depthStencil;
 		ID3D11Texture2D* m_depthBuffer;
+		ID3D11Buffer* m_wvpBuffer;
 
 		VertexShader m_vs;
 		PixelShader m_ps;

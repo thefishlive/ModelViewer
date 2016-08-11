@@ -4,7 +4,7 @@ using namespace DX11Engine;
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev, LPSTR lpCmdLine, int nShowCmd)
 {
-	Window window = Window(L"DX11 Engine", 800, 800, true);
+	Window window = Window(L"DX11 Engine", 800, 800, false);
 
 	if (!window.Init(instance, nShowCmd))
 	{

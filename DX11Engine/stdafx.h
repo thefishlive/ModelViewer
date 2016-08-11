@@ -14,8 +14,6 @@
 
 // Check the state of a HRESULT
 #define CHECK_RESULT_VOID(r, t) { if (FAILED(r)) { MessageBox(NULL, t, TEXT("Direct 3D Error"), MB_ICONERROR | MB_OK); return; } }
-
-// Check the state of a HRESULT
 #define CHECK_RESULT_BOOL(r, t) { if (FAILED(r)) { MessageBox(NULL, t, TEXT("Direct 3D Error"), MB_ICONERROR | MB_OK); return false; } }
 
 #define SHADER_VERSION(t) t "_4_0"

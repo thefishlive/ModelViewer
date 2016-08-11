@@ -7,7 +7,19 @@ DX11Engine::Window::Window(LPCTSTR name, int width, int height, bool fullscreen)
 	m_width(width),
 	m_height(height),
 	m_fullscreen(fullscreen),
-	m_device(DirectXDevice( width, height, fullscreen, { 0.0f, 0.0f, 0.0f, 1.0f } ))
+	m_device(
+		width,
+		height,
+		!fullscreen,
+		Camera( 
+			{2.5f, 2.5f, -2.5f, 0.0f},
+			{0.0f, 0.0f, 0.0f, 0.0f},
+			{0.0f, 1.0f, 0.0f, 0.0f},
+			0.4f * XM_PI,
+			(float) width / height,
+			0.4f, 1000.0f
+		)
+	)
 {
 }
 
@@ -134,10 +146,7 @@ LRESULT DX11Engine::Window::WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM
 	case WM_KEYDOWN:
 		if (wParam == VK_ESCAPE)
 		{
-			if (MessageBox(0, L"Are you sure?", L"Are you sure?", MB_YESNO | MB_ICONQUESTION) == IDYES)
-			{
-				DestroyWindow(window);
-			}
+			DestroyWindow(window);
 		}
 		return 0;
 
