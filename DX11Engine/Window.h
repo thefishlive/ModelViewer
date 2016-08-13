@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "DirectXDevice.h"
+#include "FPSTimer.h"
 
 namespace DX11Engine
 {
@@ -30,6 +31,8 @@ namespace DX11Engine
 
 		HWND m_window;
 		DirectXDevice m_device;
+
+		FPSTimer m_timer;
 	};
 }
 

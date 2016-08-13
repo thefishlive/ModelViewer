@@ -118,7 +118,9 @@ int DX11Engine::Window::Start()
 		}
 		else
 		{
-			if (!m_device.UpdateScene())
+			m_timer.Update();
+
+			if (!m_device.UpdateScene(m_timer.FrameTime))
 			{
 				MessageBox(0, L"Error updating scene", L"Error", MB_OK | MB_ICONERROR);
 				break;

@@ -22,7 +22,7 @@ namespace DX11Engine
 		bool InitDevice(HINSTANCE instance, HWND window);
 
 		bool InitScene();
-		bool UpdateScene();
+		bool UpdateScene(float time);
 		bool DrawScene();
 
 		void SetFullscreen(bool fullscreen);

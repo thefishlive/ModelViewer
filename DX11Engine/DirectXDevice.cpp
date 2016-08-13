@@ -270,7 +270,7 @@ bool DX11Engine::DirectXDevice::InitScene()
 	return true;
 }
 
-bool DX11Engine::DirectXDevice::UpdateScene()
+bool DX11Engine::DirectXDevice::UpdateScene(float time)
 {
 	return true;
 }
