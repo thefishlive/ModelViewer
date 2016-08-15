@@ -155,17 +155,20 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DirectXDevice.cpp" />
+    <ClCompile Include="FontRenderer.cpp" />
     <ClCompile Include="FPSTimer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="PixelShader.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DirectXDevice.h" />
+    <ClInclude Include="FontRenderer.h" />
     <ClInclude Include="FPSTimer.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Model.h" />

@@ -37,6 +37,16 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 
 	HRESULT result;
 
+	// Create the DXGI adapter
+	IDXGIFactory1* factory;
+	result = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory);
+	CHECK_RESULT_BOOL(result, TEXT("CreateDXGIFactory1"));
+	
+	IDXGIAdapter1* adapter;
+	result = factory->EnumAdapters1(0, &adapter);
+	CHECK_RESULT_BOOL(result, TEXT("factory->EnumAdapters1"));
+	SAFE_RELEASE(factory);
+
 	// Create swap chain
 	DXGI_MODE_DESC bufferDesc;
 	ZeroMemory(&bufferDesc, sizeof(DXGI_MODE_DESC));
@@ -45,14 +55,14 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 	bufferDesc.Height = height;
 	bufferDesc.RefreshRate.Numerator = 60;
 	bufferDesc.RefreshRate.Denominator = 1;
-	bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	bufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	bufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
 	bufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
 	DXGI_SAMPLE_DESC sampleDesc;
 	ZeroMemory(&sampleDesc, sizeof(DXGI_SAMPLE_DESC));
 
-	sampleDesc.Count = 1;
+	sampleDesc.Count = 4;
 	sampleDesc.Quality = 0;
 
 	DXGI_SWAP_CHAIN_DESC scDesc;
@@ -67,11 +77,15 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 	scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	UINT flags = D3D11_CREATE_DEVICE_DEBUG;
+	UINT flags =  D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+
+#if defined( DEBUG ) || defined( _DEBUG )
+	flags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
 
 	result = D3D11CreateDeviceAndSwapChain(
-		NULL,
-		D3D_DRIVER_TYPE_HARDWARE,
+		adapter,
+		D3D_DRIVER_TYPE_UNKNOWN,
 		NULL,
 		flags,
 		NULL,
@@ -83,8 +97,13 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 		NULL,
 		&m_devcon
 	);
-
 	CHECK_RESULT_BOOL(result, TEXT("D3D11CreateDeviceAndSwapChain"));
+
+	// Initialise D2D
+	if (!m_fontRenderer.Init(m_device, adapter, width, height))
+		return false;
+
+	SAFE_RELEASE(adapter);
 
 	// Create back buffer
 	ID3D11Texture2D* backBuffer;
@@ -151,6 +170,10 @@ bool DX11Engine::DirectXDevice::InitDevice(HINSTANCE instance, HWND window)
 bool DX11Engine::DirectXDevice::InitScene()
 {
 	HRESULT result;
+
+	// Initialise D2D
+	if (!m_fontRenderer.InitScreenTexture(m_device))
+		return false;
 
 	// Load Shaders
 	m_vs.LoadShader(m_device);
@@ -234,31 +257,8 @@ bool DX11Engine::DirectXDevice::InitScene()
 	cube.Transformation = XMMatrixIdentity();
 	m_models.push_back(cube);
 
-	D3D11_BUFFER_DESC desc;
-
-	// Create WVP Constant buffer
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(WVPBuffer);
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = 0;
-
-	result = m_device->CreateBuffer(&desc, NULL, &m_wvpBuffer);
-	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateBuffer"));
-
-	// Create Light Constant Buffer
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(LightBuffer);
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = 0;
-
-	result = m_device->CreateBuffer(&desc, NULL, &m_sceneBuffer);
-	CHECK_RESULT_BOOL(result, TEXT("m_device->CreateBuffer"));
+	CreateBuffer(m_device, &m_wvpBuffer, D3D11_BIND_CONSTANT_BUFFER, NULL, sizeof(WVPBuffer));
+	CreateBuffer(m_device, &m_sceneBuffer, D3D11_BIND_CONSTANT_BUFFER, NULL, sizeof(LightBuffer));
 
 	// Setup light
 	Light light = Light();
@@ -280,14 +280,14 @@ bool DX11Engine::DirectXDevice::DrawScene()
 	m_devcon->ClearRenderTargetView(m_rtv, Background);
 	m_devcon->ClearDepthStencilView(m_depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-
 	m_devcon->UpdateSubresource(m_sceneBuffer, 0, NULL, &m_lightBuffer, 0, 0);
 	m_devcon->PSSetConstantBuffers(0, 1, &m_sceneBuffer);
 
 	WVPBuffer wvpBuffer;
 	XMMATRIX wvp;
 
-	for (auto &i : m_models) {
+	for (auto &i : m_models) 
+	{
 		Camera.Recalcuate();
 		wvp = Camera.BuildWVP(i.Transformation);
 		wvpBuffer.WVP = XMMatrixTranspose(wvp);
@@ -298,6 +298,8 @@ bool DX11Engine::DirectXDevice::DrawScene()
 
 		i.Draw(m_device, m_devcon);
 	}
+
+	m_fontRenderer.PrintText(m_devcon, L"Hello DWrite");
 
 	m_swapChain->Present(0, 0);
 	return true;
@@ -347,6 +349,7 @@ bool DX11Engine::DirectXDevice::Release()
 	m_ps.Release();
 
 	m_model.Release();
+	m_fontRenderer.Release();
 
 	return true;
 }

@@ -7,7 +7,7 @@ namespace DX11Engine
 	class Shader
 	{
 	public:
-		Shader(LPCTSTR file, LPCSTR type, LPCSTR version);
+		Shader(LPCTSTR file, LPCSTR entry, LPCSTR version);
 		~Shader();
 
 		void Release();

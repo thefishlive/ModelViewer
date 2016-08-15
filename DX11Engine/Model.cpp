@@ -15,40 +15,8 @@ bool DX11Engine::Model::Init(ID3D11Device* device, Vertex verticies[], UINT vCou
 	m_iCount = iCount;
 
 	HRESULT result;
-	D3D11_BUFFER_DESC desc;
-	D3D11_SUBRESOURCE_DATA data;
-
-	// Create vertex buffer
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(Vertex) * vCount;
-	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = 0;
-
-	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	data.pSysMem = verticies;
-
-	result = device->CreateBuffer(&desc, &data, &m_verticies);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateBuffer"));
-
-	// Create index buffer
-	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
-
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(DWORD) * iCount;
-	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = 0;
-
-	ZeroMemory(&data, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	data.pSysMem = indicies;
-
-	result = device->CreateBuffer(&desc, &data, &m_indicies);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateBuffer"));
+	CreateBuffer(device, &m_verticies, D3D11_BIND_VERTEX_BUFFER, verticies, sizeof(Vertex) * vCount);
+	CreateBuffer(device, &m_indicies, D3D11_BIND_INDEX_BUFFER, indicies, sizeof(DWORD) * iCount);
 
 	// Load texture
 	if (texturename != L"")

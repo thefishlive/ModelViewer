@@ -8,6 +8,7 @@
 #include "PixelShader.h"
 #include "Model.h"
 #include "Camera.h"
+#include "FontRenderer.h"
 
 typedef const DX11Engine::Camera& CCamera;
 
@@ -58,6 +59,8 @@ namespace DX11Engine
 
 		Model m_model;
 		std::vector<Model> m_models;
+
+		FontRenderer m_fontRenderer;
 
 		D3D11_VIEWPORT BuildViewport(int width, int height);
 	};
