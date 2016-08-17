@@ -4,6 +4,14 @@
 
 namespace DX11Engine
 {
+	enum LightType
+	{
+		Unlit = 0,
+		Direcitonal = 1,
+		Point = 2,
+		Spot = 3
+	};
+
 	struct Vertex
 	{
 		Vertex() {}
@@ -24,8 +32,15 @@ namespace DX11Engine
 			ZeroMemory(this, sizeof(Light));
 		}
 
+		LightType type;
+		XMFLOAT3 position;
+
 		XMFLOAT3 dir;
 		float pad;
+
+		float range;
+		XMFLOAT3 att;
+
 		XMFLOAT4 ambient;
 		XMFLOAT4 diffuse;
 	};

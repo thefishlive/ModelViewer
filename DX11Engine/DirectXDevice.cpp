@@ -176,11 +176,10 @@ bool DX11Engine::DirectXDevice::InitScene()
 		return false;
 
 	// Load Shaders
-	m_vs.LoadShader(m_device);
-	m_vs.BindShader(m_devcon);
-
-	m_ps.LoadShader(m_device);
-	m_ps.BindShader(m_devcon);
+	if (!m_vs.LoadShader(m_device) || !m_vs.BindShader(m_devcon))
+		return false;
+	if (!m_ps.LoadShader(m_device) || !m_ps.BindShader(m_devcon))
+		return false;
 
 	// Load models
 	// Load square
@@ -262,7 +261,11 @@ bool DX11Engine::DirectXDevice::InitScene()
 
 	// Setup light
 	Light light = Light();
+	light.type = LightType::Point;
 	light.dir = XMFLOAT3(-2.5f, 2.5f, -2.5f);
+	light.position = XMFLOAT3(0.0f, 2.5f, 0.0f);
+	light.att = XMFLOAT3(0.0f, 0.2f, 0.0f);
+	light.range = 100.0f;
 	light.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
 	light.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_lightBuffer.light = light;

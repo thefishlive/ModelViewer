@@ -9,19 +9,24 @@ DX11Engine::PixelShader::~PixelShader()
 {
 }
 
-void DX11Engine::PixelShader::LoadShader(ID3D11Device * device)
+bool DX11Engine::PixelShader::LoadShader(ID3D11Device * device)
 {
+	if (Errored)
+		return false;
+
 	HRESULT result;
 	result = device->CreatePixelShader(Bytecode->GetBufferPointer(), Bytecode->GetBufferSize(), NULL, &m_shader);
-	CHECK_RESULT_VOID(result, TEXT("device->CreatePixelShader"));
+	CHECK_RESULT_BOOL(result, TEXT("device->CreatePixelShader"));
 
 	Loaded = true;
+	return true;
 }
 
-void DX11Engine::PixelShader::BindShader(ID3D11DeviceContext * devcon)
+bool DX11Engine::PixelShader::BindShader(ID3D11DeviceContext * devcon)
 {
 	if (!Loaded)
-		return;
+		return false;
 
 	devcon->PSSetShader(m_shader, 0, 0);
+	return true;
 }

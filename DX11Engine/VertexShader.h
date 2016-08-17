@@ -10,10 +10,9 @@ namespace DX11Engine
 		VertexShader(LPCTSTR file, LPCSTR main);
 		~VertexShader();
 
-		void LoadShader(ID3D11Device* device);
-		void BindShader(ID3D11DeviceContext * devcon);
+		bool LoadShader(ID3D11Device* device);
+		bool BindShader(ID3D11DeviceContext * devcon);
 
-		bool Loaded;
 	private:
 		ID3D11VertexShader* m_shader;
 	};
