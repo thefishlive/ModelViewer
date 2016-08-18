@@ -11,7 +11,7 @@ namespace DX11Engine
 		~Model();
 
 		bool Init(ID3D11Device* device, Vertex verticies[], UINT vCount, DWORD indicies[], UINT iCount, LPCTSTR texturename = L"");
-		bool Draw(ID3D11Device* device, ID3D11DeviceContext* devcon);
+		bool Draw(ID3D11DeviceContext* devcon);
 		void Release();
 
 		bool Loaded;

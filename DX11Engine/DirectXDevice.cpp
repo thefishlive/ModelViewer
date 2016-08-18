@@ -4,13 +4,15 @@ using namespace DX11Engine;
 
 DX11Engine::DirectXDevice::DirectXDevice(int width, int height, BOOL windowed, CCamera camera, D3DXCOLOR background) :
 	Background(background),
-	m_vs(VertexShader(L"Effect.fx", "VS")),
-	m_ps(PixelShader(L"Effect.fx", "PS")),
+	m_vs(VertexShader(L"VertexShader.hlsl", "main")),
+	m_ps(PixelShader(L"StandardShader.hlsl", "main")),
+	m_unlit(PixelShader(L"UnlitShader.hlsl", "main")),
 	m_width(width),
 	m_height(height),
 	m_windowed(windowed),
 	m_models(),
-	Camera(camera)
+	Camera(camera),
+	m_vsync(true)
 {
 }
 
@@ -180,6 +182,8 @@ bool DX11Engine::DirectXDevice::InitScene()
 		return false;
 	if (!m_ps.LoadShader(m_device) || !m_ps.BindShader(m_devcon))
 		return false;
+	if (!m_unlit.LoadShader(m_device))
+		return false;
 
 	// Load models
 	// Load square
@@ -259,16 +263,36 @@ bool DX11Engine::DirectXDevice::InitScene()
 	CreateBuffer(m_device, &m_wvpBuffer, D3D11_BIND_CONSTANT_BUFFER, NULL, sizeof(WVPBuffer));
 	CreateBuffer(m_device, &m_sceneBuffer, D3D11_BIND_CONSTANT_BUFFER, NULL, sizeof(LightBuffer));
 
-	// Setup light
-	Light light = Light();
-	light.type = LightType::Point;
-	light.dir = XMFLOAT3(-2.5f, 2.5f, -2.5f);
-	light.position = XMFLOAT3(0.0f, 2.5f, 0.0f);
-	light.att = XMFLOAT3(0.0f, 0.2f, 0.0f);
-	light.range = 100.0f;
-	light.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
-	light.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	m_lightBuffer.light = light;
+	// Setup lights
+	Light light1 = Light();
+	light1.type = LightType::Point;
+	light1.position = XMFLOAT3(0.0f, 2.5f, 0.0f);
+	light1.att = XMFLOAT3(0.0f, 0.2f, 0.0f);
+	light1.range = 100.0f;
+	light1.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	light1.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	m_lightBuffer.light[0] = light1;
+
+	Light light2 = Light();
+	light2.type = LightType::Point;
+	light2.position = XMFLOAT3(2.5f, 0.0f, 0.0f);
+	light2.att = XMFLOAT3(0.0f, 0.2f, 0.0f);
+	light2.range = 100.0f;
+	light2.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	light2.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	m_lightBuffer.light[1] = light2;
+
+	Light light3 = Light();
+	light3.type = LightType::Point;
+	light3.position = XMFLOAT3(0.0f, 0.0f, 2.5f);
+	light3.att = XMFLOAT3(0.0f, 0.2f, 0.0f);
+	light3.range = 100.0f;
+	light3.ambient = XMFLOAT4(0.2f, 0.2f, 0.2f, 1.0f);
+	light3.diffuse = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	m_lightBuffer.light[2] = light3;
 
 	return true;
 }
@@ -278,13 +302,16 @@ bool DX11Engine::DirectXDevice::UpdateScene(float time)
 	return true;
 }
 
-bool DX11Engine::DirectXDevice::DrawScene()
+bool DX11Engine::DirectXDevice::DrawScene(FPSTimer timer)
 {
 	m_devcon->ClearRenderTargetView(m_rtv, Background);
 	m_devcon->ClearDepthStencilView(m_depthStencil, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	m_devcon->UpdateSubresource(m_sceneBuffer, 0, NULL, &m_lightBuffer, 0, 0);
 	m_devcon->PSSetConstantBuffers(0, 1, &m_sceneBuffer);
+
+	if (!m_ps.BindShader(m_devcon))
+		return false;
 
 	WVPBuffer wvpBuffer;
 	XMMATRIX wvp;
@@ -299,12 +326,15 @@ bool DX11Engine::DirectXDevice::DrawScene()
 		m_devcon->UpdateSubresource(m_wvpBuffer, 0, NULL, &wvpBuffer, 0, 0);
 		m_devcon->VSSetConstantBuffers(0, 1, &m_wvpBuffer);
 
-		i.Draw(m_device, m_devcon);
+		i.Draw(m_devcon);
 	}
 
-	m_fontRenderer.PrintText(m_devcon, L"Hello DWrite");
+	if (!m_unlit.BindShader(m_devcon))
+		return false;
 
-	m_swapChain->Present(0, 0);
+	m_fontRenderer.PrintText(m_devcon, L"FPS: " + std::to_wstring(timer.FPS) + L"   Frame Time: " + std::to_wstring(timer.FrameTime) + L"s");
+
+	m_swapChain->Present(m_vsync ? 1 : 0, 0);
 	return true;
 }
 

@@ -2,6 +2,8 @@
 
 #include <xnamath.h>
 
+#define MAX_LIGHTS 3
+
 namespace DX11Engine
 {
 	enum LightType
@@ -53,7 +55,7 @@ namespace DX11Engine
 
 	struct LightBuffer
 	{
-		Light light;
+		Light light[3];
 	};
 
 }

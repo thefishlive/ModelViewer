@@ -185,12 +185,6 @@ bool DX11Engine::FontRenderer::InitScreenTexture(ID3D11Device* device)
 	result = device->CreateSamplerState(&sampDesc, &m_sampler);
 	CHECK_RESULT_BOOL(result, TEXT("device->CreateSamplerState"));
 
-	// Create Light buffer
-	CreateBuffer(device, &m_sceneBuffer, D3D11_BIND_CONSTANT_BUFFER, NULL, sizeof(LightBuffer));
-
-	m_lightBuffer = LightBuffer();
-	m_lightBuffer.light.type = LightType::Unlit;
-
 	return true;
 }
 
@@ -241,8 +235,6 @@ void DX11Engine::FontRenderer::PrintText(ID3D11DeviceContext* devcon, std::wstri
 	devcon->RSSetState(m_renderState);
 
 	// Setup Pixel Shader
-	devcon->UpdateSubresource(m_sceneBuffer, 0, NULL, &m_lightBuffer, 0, 0);
-	devcon->PSSetConstantBuffers(0, 1, &m_sceneBuffer);
 	devcon->PSSetShaderResources(0, 1, &m_texture);
 	devcon->PSSetSamplers(0, 1, &m_sampler);
 

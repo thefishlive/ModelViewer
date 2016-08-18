@@ -126,7 +126,7 @@ int DX11Engine::Window::Start()
 				break;
 			}
 
-			if (!m_device.DrawScene())
+			if (!m_device.DrawScene(m_timer))
 			{
 				MessageBox(0, L"Error drawing scene", L"Error", MB_OK | MB_ICONERROR);
 				break;

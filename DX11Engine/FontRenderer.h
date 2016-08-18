@@ -2,6 +2,8 @@
 
 #include "stdafx.h"
 
+#include "PixelShader.h"
+
 namespace DX11Engine
 {
 	class FontRenderer
@@ -29,7 +31,6 @@ namespace DX11Engine
 		ID3D11Buffer *m_vertBuffer;
 		ID3D11Buffer *m_indexBuffer;
 		ID3D11Buffer *m_objectBuffer;
-		ID3D11Buffer *m_sceneBuffer;
 		ID3D11Texture2D *m_backBuffer;
 		ID3D11Texture2D *m_sharedTex;
 		ID3D11ShaderResourceView *m_texture;
@@ -40,8 +41,6 @@ namespace DX11Engine
 
 		IDXGIKeyedMutex *m_lock11;
 		IDXGIKeyedMutex *m_lock10;
-
-		LightBuffer m_lightBuffer;
 
 		int m_width;
 		int m_height;

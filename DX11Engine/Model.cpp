@@ -45,7 +45,7 @@ bool DX11Engine::Model::Init(ID3D11Device* device, Vertex verticies[], UINT vCou
 	return true;
 }
 
-bool DX11Engine::Model::Draw(ID3D11Device* device, ID3D11DeviceContext* devcon)
+bool DX11Engine::Model::Draw(ID3D11DeviceContext* devcon)
 {
 	if (!Loaded)
 		return false;

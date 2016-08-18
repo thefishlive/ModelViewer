@@ -9,6 +9,8 @@
 #include "Model.h"
 #include "Camera.h"
 #include "FontRenderer.h"
+#include "FPSTimer.h"
+
 
 typedef const DX11Engine::Camera& CCamera;
 
@@ -24,7 +26,7 @@ namespace DX11Engine
 
 		bool InitScene();
 		bool UpdateScene(float time);
-		bool DrawScene();
+		bool DrawScene(FPSTimer timer);
 
 		void SetFullscreen(bool fullscreen);
 
@@ -36,6 +38,8 @@ namespace DX11Engine
 	private:
 		HWND m_window;
 		bool m_windowed;
+
+		bool m_vsync;
 
 		// The windowed width and height
 		int m_width;
@@ -56,6 +60,7 @@ namespace DX11Engine
 
 		VertexShader m_vs;
 		PixelShader m_ps;
+		PixelShader m_unlit;
 
 		Model m_model;
 		std::vector<Model> m_models;
