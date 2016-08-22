@@ -16,7 +16,7 @@ bool DX11Engine::VertexShader::LoadShader(ID3D11Device * device)
 
 	HRESULT result;
 	result = device->CreateVertexShader(Bytecode->GetBufferPointer(), Bytecode->GetBufferSize(), NULL, &m_shader);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateVertexShader"));
+	HR_B(result, TEXT("device->CreateVertexShader"));
 
 	Loaded = true;
 	return true;

@@ -25,7 +25,7 @@ namespace DX11Engine
 		bool Errored;
 
 	private:
-		void OutputErrorMessage(ID3D10Blob* error, LPCTSTR file);
+		void OutputErrorMessage(ID3D10Blob* error, LPCTSTR file, bool show = true);
 	};
 }
 

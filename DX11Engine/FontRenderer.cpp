@@ -28,7 +28,7 @@ bool DX11Engine::FontRenderer::Init(ID3D11Device * device, IDXGIAdapter1 * adapt
 		D3D10_1_SDK_VERSION,
 		&m_device
 	);
-	CHECK_RESULT_BOOL(result, TEXT("D3D10CreateDevice1"));
+	HR_B(result, TEXT("D3D10CreateDevice1"));
 
 	D3D11_TEXTURE2D_DESC sharedTexDesc;
 	ZeroMemory(&sharedTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -44,32 +44,32 @@ bool DX11Engine::FontRenderer::Init(ID3D11Device * device, IDXGIAdapter1 * adapt
 	sharedTexDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
 	result = device->CreateTexture2D(&sharedTexDesc, NULL, &m_sharedTex);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateTexture2D"));
+	HR_B(result, TEXT("device->CreateTexture2D"));
 
 	result = m_sharedTex->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&m_lock11);
-	CHECK_RESULT_BOOL(result, TEXT("m_sharedTex->QueryInterface"));
+	HR_B(result, TEXT("m_sharedTex->QueryInterface"));
 
 	IDXGIResource* sharedResource10;
 	HANDLE sharedHandle10;
 
 	result = m_sharedTex->QueryInterface(__uuidof(IDXGIResource), (void**)&sharedResource10);
-	CHECK_RESULT_BOOL(result, TEXT("m_sharedTex->QueryInterface"));
+	HR_B(result, TEXT("m_sharedTex->QueryInterface"));
 	result = sharedResource10->GetSharedHandle(&sharedHandle10);
-	CHECK_RESULT_BOOL(result, TEXT("sharedResource10->GetSharedHandle"));
+	HR_B(result, TEXT("sharedResource10->GetSharedHandle"));
 
 	SAFE_RELEASE(sharedResource10);
 
 	// Create shared surface
 	IDXGISurface1* sharedSurface10;
 	result = m_device->OpenSharedResource(sharedHandle10, __uuidof(IDXGISurface1), (void**)&sharedSurface10);
-	CHECK_RESULT_BOOL(result, TEXT("m_device->OpenSharedResource"));
+	HR_B(result, TEXT("m_device->OpenSharedResource"));
 	result = sharedSurface10->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)&m_lock10);
-	CHECK_RESULT_BOOL(result, TEXT("sharedSurface10->QueryInterface"));
+	HR_B(result, TEXT("sharedSurface10->QueryInterface"));
 
 	// Setup Direct2D
 	ID2D1Factory *d2dFactory;
 	result = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory), (void**)&d2dFactory);
-	CHECK_RESULT_BOOL(result, TEXT("D2D1CreateFactory"));
+	HR_B(result, TEXT("D2D1CreateFactory"));
 
 	D2D1_RENDER_TARGET_PROPERTIES renderTargetProps;
 	ZeroMemory(&renderTargetProps, sizeof(D2D1_RENDER_TARGET_PROPERTIES));
@@ -78,17 +78,17 @@ bool DX11Engine::FontRenderer::Init(ID3D11Device * device, IDXGIAdapter1 * adapt
 	renderTargetProps.pixelFormat = D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED);
 
 	result = d2dFactory->CreateDxgiSurfaceRenderTarget(sharedSurface10, &renderTargetProps, &m_renderTarget);
-	CHECK_RESULT_BOOL(result, TEXT("d2dFactory->CreateDxgiSurfaceRenderTarget"));
+	HR_B(result, TEXT("d2dFactory->CreateDxgiSurfaceRenderTarget"));
 
 	SAFE_RELEASE(sharedSurface10);
 	SAFE_RELEASE(d2dFactory);
 
 	result = m_renderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), &m_brush);
-	CHECK_RESULT_BOOL(result, TEXT("m_renderTarget->CreateSolidColorBrush"));
+	HR_B(result, TEXT("m_renderTarget->CreateSolidColorBrush"));
 
 	// Setup DirectWrite
 	result = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&m_dwriteFactory));
-	CHECK_RESULT_BOOL(result, TEXT("DWriteCreateFactory"));
+	HR_B(result, TEXT("DWriteCreateFactory"));
 
 	result = m_dwriteFactory->CreateTextFormat(
 		L"Script",
@@ -100,12 +100,12 @@ bool DX11Engine::FontRenderer::Init(ID3D11Device * device, IDXGIAdapter1 * adapt
 		L"en-us",
 		&m_textFormat
 	);
-	CHECK_RESULT_BOOL(result, TEXT("m_dwriteFactory->CreateTextFormat"));
+	HR_B(result, TEXT("m_dwriteFactory->CreateTextFormat"));
 
 	result = m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-	CHECK_RESULT_BOOL(result, TEXT("m_textFormat->SetTextAlignment"));
+	HR_B(result, TEXT("m_textFormat->SetTextAlignment"));
 	result = m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-	CHECK_RESULT_BOOL(result, TEXT("m_textFormat->SetParagraphAlignment"));
+	HR_B(result, TEXT("m_textFormat->SetParagraphAlignment"));
 
 	m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 	return true;
@@ -117,10 +117,10 @@ bool DX11Engine::FontRenderer::InitScreenTexture(ID3D11Device* device)
 
 	Vertex v[] =
 	{
-		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f),
-		Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f),
-		Vertex(1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f),
-		Vertex(1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f),
+		Vertex(-1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f),
+		Vertex(-1.0f,  1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f),
+		Vertex( 1.0f,  1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f),
+		Vertex( 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f),
 	};
 
 	DWORD i[] =
@@ -135,7 +135,7 @@ bool DX11Engine::FontRenderer::InitScreenTexture(ID3D11Device* device)
 	CreateBuffer(device, &m_objectBuffer, D3D11_BIND_CONSTANT_BUFFER, NULL, sizeof(WVPBuffer));
 
 	result = device->CreateShaderResourceView(m_sharedTex, NULL, &m_texture);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateShaderResourceView"));
+	HR_B(result, TEXT("device->CreateShaderResourceView"));
 
 	// Create render state
 	D3D11_RASTERIZER_DESC rsDesc;
@@ -146,7 +146,7 @@ bool DX11Engine::FontRenderer::InitScreenTexture(ID3D11Device* device)
 	rsDesc.MultisampleEnable = true;
 
 	result = device->CreateRasterizerState(&rsDesc, &m_renderState);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateRasterizerState"));
+	HR_B(result, TEXT("device->CreateRasterizerState"));
 
 	// Create blend state
 	D3D11_BLEND_DESC blendDesc;
@@ -168,7 +168,7 @@ bool DX11Engine::FontRenderer::InitScreenTexture(ID3D11Device* device)
 	blendDesc.RenderTarget[0] = rtbd;
 
 	result = device->CreateBlendState(&blendDesc, &m_blendState);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateBlendState"));
+	HR_B(result, TEXT("device->CreateBlendState"));
 
 	// Create sampler
 	D3D11_SAMPLER_DESC sampDesc;
@@ -183,7 +183,7 @@ bool DX11Engine::FontRenderer::InitScreenTexture(ID3D11Device* device)
 	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	result = device->CreateSamplerState(&sampDesc, &m_sampler);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreateSamplerState"));
+	HR_B(result, TEXT("device->CreateSamplerState"));
 
 	return true;
 }

@@ -19,12 +19,14 @@ namespace DX11Engine
 		Vertex() {}
 		Vertex(float x, float y, float z,
 			float u, float v,
-			float nx, float ny, float nz)
-			: pos(x, y, z), texCoord(u, v), normal(nx, ny, nz) {}
+			float nx, float ny, float nz,
+			float tx, float ty, float tz)
+			: pos(x, y, z), texCoord(u, v), normal(nx, ny, nz), tangent(tx, ty, tz) {}
 
 		XMFLOAT3 pos;
 		XMFLOAT2 texCoord;
 		XMFLOAT3 normal;
+		XMFLOAT3 tangent;
 	};
 
 	struct Light
@@ -37,8 +39,8 @@ namespace DX11Engine
 		LightType type;
 		XMFLOAT3 position;
 
+		BOOL enabled;
 		XMFLOAT3 dir;
-		float pad;
 
 		float range;
 		XMFLOAT3 att;
@@ -51,6 +53,9 @@ namespace DX11Engine
 	{
 		XMMATRIX WVP;
 		XMMATRIX World;
+
+		BOOL hasTexture;
+		BOOL hasNormalMap;
 	};
 
 	struct LightBuffer

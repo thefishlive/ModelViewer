@@ -9,6 +9,7 @@
 #include "Model.h"
 #include "Camera.h"
 #include "FontRenderer.h"
+#include "Input.h"
 #include "FPSTimer.h"
 
 
@@ -40,6 +41,7 @@ namespace DX11Engine
 		bool m_windowed;
 
 		bool m_vsync;
+		bool m_lightingEnabled = true;
 
 		// The windowed width and height
 		int m_width;
@@ -52,7 +54,6 @@ namespace DX11Engine
 		ID3D11InputLayout* m_layout;
 		ID3D11DepthStencilView* m_depthStencil;
 		ID3D11Texture2D* m_depthBuffer;
-		ID3D11Buffer* m_wvpBuffer;
 		ID3D11RasterizerState* m_renderState;
 
 		LightBuffer m_lightBuffer;
@@ -62,10 +63,10 @@ namespace DX11Engine
 		PixelShader m_ps;
 		PixelShader m_unlit;
 
-		Model m_model;
 		std::vector<Model> m_models;
 
 		FontRenderer m_fontRenderer;
+		InputManager m_input;
 
 		D3D11_VIEWPORT BuildViewport(int width, int height);
 	};

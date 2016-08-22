@@ -19,12 +19,12 @@ void CreateBuffer(ID3D11Device* device, ID3D11Buffer **target, UINT flags, const
 
 		subData.pSysMem = data;
 		result = device->CreateBuffer(&desc, &subData, target);
-		CHECK_RESULT_VOID(result, TEXT("device->CreateBuffer"));
+		HR_V(result, TEXT("device->CreateBuffer"));
 	}
 	else 
 	{
 		result = device->CreateBuffer(&desc, NULL, target);
-		CHECK_RESULT_VOID(result, TEXT("device->CreateBuffer"));
+		HR_V(result, TEXT("device->CreateBuffer"));
 	}
 
 }

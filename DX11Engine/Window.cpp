@@ -145,13 +145,6 @@ LRESULT DX11Engine::Window::WndProc(HWND window, UINT msg, WPARAM wParam, LPARAM
 {
 	switch (msg)
 	{
-	case WM_KEYDOWN:
-		if (wParam == VK_ESCAPE)
-		{
-			DestroyWindow(window);
-		}
-		return 0;
-
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;

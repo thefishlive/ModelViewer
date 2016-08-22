@@ -5,6 +5,7 @@ struct VS_OUTPUT
 	float2 TexCoord : TEXCOORD;
 	float3 Normal : NORMAL;
 	float3 WorldPos : POSITION;
+	float3 tangent : TANGENT;
 };
 
 Texture2D Texture;

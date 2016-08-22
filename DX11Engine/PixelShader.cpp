@@ -16,7 +16,7 @@ bool DX11Engine::PixelShader::LoadShader(ID3D11Device * device)
 
 	HRESULT result;
 	result = device->CreatePixelShader(Bytecode->GetBufferPointer(), Bytecode->GetBufferSize(), NULL, &m_shader);
-	CHECK_RESULT_BOOL(result, TEXT("device->CreatePixelShader"));
+	HR_B(result, TEXT("device->CreatePixelShader"));
 
 	Loaded = true;
 	return true;

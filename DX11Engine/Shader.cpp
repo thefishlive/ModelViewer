@@ -12,8 +12,23 @@ DX11Engine::Shader::Shader(LPCTSTR file, LPCSTR entry, LPCSTR version)
 
 	ID3D10Blob* error;
 
+#if defined( DEBUG ) || defined ( _DEBUG )
+	// Load from raw shader
 	result = D3DX11CompileFromFile(file, 0, ((ID3DInclude*)(UINT_PTR)1), entry, version, 0, flags, 0, &Bytecode, &error, 0);
+#else
+	// Load from compiled shader
+	// TODO load compiled shader
+#endif
+
 	Errored = FAILED(result);
+
+#if defined( DEBUG ) || defined ( _DEBUG )
+	if (error)
+	{
+		OutputErrorMessage(error, file, false);
+		error->Release();
+	}
+#endif
 
 	if (Errored)
 	{
@@ -37,21 +52,18 @@ void DX11Engine::Shader::Release()
 	SAFE_RELEASE(Bytecode);
 }
 
-void DX11Engine::Shader::OutputErrorMessage(ID3D10Blob * error, LPCTSTR file)
+void DX11Engine::Shader::OutputErrorMessage(ID3D10Blob * error, LPCTSTR file, bool show)
 {
 	char* compileErrors;
 	unsigned long bufferSize, i;
 	ofstream fout;
+	wstring errorFile = std::wstring(file) + L".error";
 
-
-	// Get a pointer to the error message text buffer.
 	compileErrors = (char*)(error->GetBufferPointer());
-
-	// Get the length of the message.
 	bufferSize = error->GetBufferSize();
 
 	// Open a file to write the error message to.
-	fout.open("shader-error.txt");
+	fout.open(errorFile);
 
 	// Write out the error message.
 	for (i = 0; i<bufferSize; i++)
@@ -65,6 +77,8 @@ void DX11Engine::Shader::OutputErrorMessage(ID3D10Blob * error, LPCTSTR file)
 	// Release the error message.
 	SAFE_RELEASE(error);
 
-	// Pop a message up on the screen to notify the user to check the text file for compile errors.
-	MessageBox(0, L"Error compiling shader.  Check shader-error.txt for message.", file, MB_OK);
+	if (show)
+	{
+		MessageBox(0, L"Error compiling shader.  Check logs for message.", file, MB_OK);
+	}
 }
